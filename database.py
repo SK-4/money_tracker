@@ -1,10 +1,8 @@
 from deta import Deta
 import streamlit as st
 
-DETA_KEY = st.secrets['DETA_KEY']
-
 #initialize with a project key
-deta = Deta(DETA_KEY)
+deta = Deta(st.secrets['DETA_KEY'])
 
 #this is how to connect a database
 db = deta.Base('monthly_reports')
