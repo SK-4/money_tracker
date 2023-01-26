@@ -5,6 +5,7 @@ import calendar
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 import pandas as pd
+import database as db
 
 # ----------- SETTINGS -----------
 
@@ -23,6 +24,12 @@ st.title(page_title+" "+page_icon_)
 years = [dt.date.today().year,dt.date.today().year+1]
 months = list(calendar.month_name[1:])
 
+
+#------DATABASE INTERFACE-----------
+def get_all_periods():
+    items = db.fetch_all_periods()
+    periods = [item['key'] for item in items]
+    return periods
 
 #------------- HIDE STREAMLIT STYLE ----------------------
 hide_st_style = """
@@ -64,12 +71,24 @@ if selected=='Data Entry':
         submitted = st.form_submit_button('Save Data')
         if submitted:
             period = str(st.session_state['year'])+"_"+str(st.session_state['month'])
-            incomes_ = {income: st.session_state[income] for income in incomes}
-            expenses_ = {expense: st.session_state[expense] for expense in expenses}
-
+            incomes = {income: st.session_state[income] for income in incomes}
+            expenses = {expense: st.session_state[expense] for expense in expenses}
+            db.insert_period(period,incomes,expenses,comment)
             st.success("Data Saved")
-            total_income = sum(incomes_.values())
-            total_expense = sum(expenses_.values())
+
+if selected=='Data Visualization':
+    st.header('Data Visualization')
+    with st.form('saved_periods'):
+        period = st.selectbox('select period:',get_all_periods())
+        submitted = st.form_submit_button('Plot Period')
+        if submitted:
+            period_data = db.get_period(period)
+            comment = period_data.get('comment')
+            expenses = period_data.get('expenses')
+            incomes = period_data.get('incomes')
+            
+            total_income = sum(incomes.values())
+            total_expense = sum(expenses.values())
             remaining_budget = total_income-total_expense
 
             st.header('Data Visualization')
@@ -78,16 +97,7 @@ if selected=='Data Entry':
             col2.metric('Total Expense',value=f'{total_expense}',delta='USD')
             col3.metric('Remaining Budget',value=f'{remaining_budget}') 
 
-if selected=='Data Visualization':
-    st.header('Data Visualization')
-    with st.form('saved_periods'):
-        period = st.selectbox('select period:',['2002 March'])
-        submitted = st.form_submit_button('Plot Period')
-        if submitted:
-            tom = {'Salary':1500,'Blog':100,'Other Income':500}
-            jerry = {'Rent':600,'Utilities':0,'Groceries':0,'Car':0,'Other Expenses':0,'Saving':0}
-            names = list(tom.keys())
-            values = list(tom.values())
-            plt.bar(range(len(tom)),values,tick_label=names)
+            names = list(incomes.keys())
+            values = list(incomes.values())
+            plt.bar(range(len(incomes)),values,tick_label=names)
             st.pyplot(plt.gcf())
-            
