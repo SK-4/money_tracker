@@ -33,11 +33,6 @@ hide_st_style = """
             </style>
 """
 st.markdown(hide_st_style,unsafe_allow_html=True)
-
-
-
-
-
 #------------- NAVIGATION MENU -----------------
 selected = option_menu(
     menu_title = None,
